@@ -3,20 +3,35 @@ import { connect } from 'react-redux'
 //import { bindActionCreators } from 'redux'
 import BookListItem from '../BoolListItem/BookListItem'
 import WithBookStoreService from '../HOC/WithBookStoreService'
-import { BooksLoaded } from '../../Actions'
+import { BooksLoaded, BooksRequested, BooksError } from '../../Actions'
 import compose from '../../Utils/Compose'
+import Spinner from '../Spinner/Spinner'
+import ErrorIndicator from '../ErrorIndicator/ErrorIndicator'
 import './BookList.css'
 
 class BookList extends Component {
 
     componentDidMount() {
-        //const { bookStoreService } = this.props
-        const data = this.props.bookStoreService.getBooks()
-        this.props.BooksLoaded(data)
+        //const { bookStoreService, BooksLoaded, BooksRequested, BooksError } = this.props
+        this.props.BooksRequested()
+        this.props.bookStoreService.getBooks()
+            .then((data) => {
+                this.props.BooksLoaded(data)
+            })
+            .catch((err) => this.props.BooksError(err))
     }
 
     render() {
-        const { books } = this.props
+        const { books, loading, error} = this.props
+
+        if (loading) {
+            return <Spinner/>
+        }
+
+        if (error) {
+            return <ErrorIndicator/>
+        }
+
         return (
             <ul className='book-list'>
                 {
@@ -33,11 +48,13 @@ class BookList extends Component {
 
 const mapStateToProps = (state) => {
     return {
-        books: state.books
+        books: state.books,
+        loading: state.loading,
+        error: state.error
     }
 }
 
-const mapDispatchToProps = { BooksLoaded }
+const mapDispatchToProps = { BooksLoaded, BooksRequested, BooksError }
 
 //const mapDispatchToProps = (dispatch) => {
     // return bindActionCreators({
